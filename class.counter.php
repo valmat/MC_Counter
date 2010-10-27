@@ -177,15 +177,8 @@ class Counter {
      */
     function set_updelim($var) {
         if($var>0)
-        $this->upd_delim = $var;
+            $this->upd_delim = $var;
     }
-    /*
-     * 
-     * function update
-     * @param $Key string  Ключ счетчика
-     * @param $Val int     Данные счетчика
-     * @return     int    counter value
-     */
     
 }
 
