@@ -1,5 +1,4 @@
 <?php
-//echo '<hr>'.__FILE__.'<hr>';
   /**
     * class Counter
     * Это образец реализации счетчика на memcache
@@ -7,7 +6,7 @@
     * Сохранение результатов применения значений счетчика осуществляется по заданному числу.
     * Можно реализовать сохранение по заданному интервалу времени
     *
-    * Конструктор принимае три аргумента: ключ, имя слота, и идентификатор для инициализации слота.
+    * Конструктор принимает три аргумента: ключ, имя слота, и идентификатор для инициализации слота.
     * Для чего это сделано: инримент счетчика должен быть очень быстрой операцией.
     * Не целесообразно тратить время и сстемные ресурсы на создание объетов, которые е будут использовны.
     * Поэтому передается только имя слот класа, который создается только в случае необходимости.
@@ -46,26 +45,26 @@ class Counter {
      *  var set as default should be redefined
      *  @var string
      */
-    const  NAME_SPACE     = 'dfct_';
+    const  NAME_SPACE = COUNTER_NAME_SPACE;
     const  LAST_DUMP_PREF = 'ld_';
     /**
       * Префикс для формирования ключа блокировки
       */
-    const LOCK_PREF = '~lock';
+    const LOCK_PREF = COUNTER_LOCK_PREF;
     /**
       * Время жизни ключа блокировки. Если во время перестроения кеша процесс аварийно завершится,
       * то блокировка останется включенной и другие процессы будут продолжать выдавать протухший кеш LOCK_TIME секунд.
       * С другой стороны если срок блокировки истечет до того, как кеш будет перестроен, то возникнет состояние гонки и блокировочный механизм перестанет работать.
       * Т.е. LOCK_TIME нужно устанавливать таким, что бы кеш точно успел быть построен, и не слишком больши, что бы протухание кеша было заметно в выдаче клиенту
       */
-    const LOCK_TIME = 3;
+    const LOCK_TIME = COUNTER_LOCK_TIME;
     
-    const SLOT_PATH = './data/counter_slots.php';
+    const SLOT_PATH = COUNTER_SLOT_PATH;
     
     /**
       * Разделитель для сохранения локального значения в глобальное
       */
-    public  $upd_delim = 12;
+    private $upd_delim = COUNTER_UPD_DELUM;
     private $Key;
     private $ld_Key;
     private $Val;
@@ -89,7 +88,7 @@ class Counter {
         $this->Key      = self::NAME_SPACE . $Key;
         $this->ld_Key   = self::NAME_SPACE . self::LAST_DUMP_PREF . $Key;
         $this->SlotName = $SlotName;
-        $this->SlotArg   = $SlotArg;
+        $this->SlotArg  = $SlotArg;
     }
     
     /*
@@ -170,6 +169,16 @@ class Counter {
         return ( $this->Val = self::$memcache->get($this->Key) );
     }
     
+    /*
+     * Функция установки интервала сброса в постоянное хранилище
+     * function set_updelim
+     * @param $var int
+     * @return void
+     */
+    function set_updelim($var) {
+        if($var>0)
+        $this->upd_delim = $var;
+    }
     /*
      * 
      * function update

@@ -25,4 +25,10 @@
       */
  define('COUNTER_SLOT_PATH', './data/counter_slots.php');
 
+    /**
+      *  Default upd_delum value
+      *  upd_delum - is upd interval for save in external storege
+      */
+ define('COUNTER_UPD_DELUM', 50);
+
 ?>

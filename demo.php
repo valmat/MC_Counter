@@ -1,7 +1,7 @@
 <?php
 echo '<hr>memory_get_usage: '.(memory_get_usage()/1024) .'Κα<br>';
 
- //define('DFLT_CACHEBKND','Memcache');
+require './config.php';
  
  
 function microtime_float(){
@@ -17,26 +17,21 @@ function microtime_float(){
        //require_once PATH_CLASS.'/class.'.strtolower($ClassName).'.php';
        require './class.'.strtolower($ClassName).'.php';
     }
-    
- //echo  Cacher::name('test');
-
- 
- //echo  SimplTempl::Plug('test',0,5);
- //echo  SimplTempl::Plug('test1');
-
 ################################################################################
 
 
-$time_start = microtime_float();
+ $time_start = microtime_float();
+ 
  $cnt = new Counter('anykey', 'AnySlot',15);
- echo $cnt->increment();
+ $cnt->set_updelim(10);
+ echo '<h2>'.$cnt->increment().'</h2>';
  //echo $cnt->set(11);
 
 
 
 
 echo '<hr>memory_get_usage: '.(memory_get_usage()/1024) .'Κα<br>';
-$time_end = microtime_float();
-echo '<hr>time: '.( ($time_end - $time_start)*1000 ).' ms<br>';
+
+echo '<hr>time: '.( (microtime_float() - $time_start)*1000 ).' ms<br>';
 
 ?>
