@@ -1,15 +1,29 @@
 php class MC_Counter
 
-This is a sample implementation of the counter to memcache You can build other implementations on a shared interface Save the results of counter values by a given number. You can implement conservation on a time interval
+This is a sample implementation of the counter to memcache You can build other 
+implementations on a shared interface Save the results of counter values by a given number. 
+You can implement conservation on a time interval
 
-The constructor takes three arguments: key slot name and an identifier for the initialization of the slot. For what it's done: inriment counter should be very fast operation. Not advisable to spend time and resources to create sstemnye obetov that e will ispolzovny. Therefore, only transferred the name slot Klas, which is created only when needed. These cases otnositsyaya data exchange between local and permanent storage schtchika. Slots neobhoimosti as Counter can not know about how to store data in permanent storage and how to access them. To prevent the fit and race, we need a mechanism locks. In the presence of blocking processes have not been granted exclusive rights to the data will be written to a temporary location, and process set the lock at the end of their work inkrimentiruet meter data from the temporary storage
+The constructor takes three arguments: key slot name and an identifier for the initialization of the slot.
+For what it's done: inriment counter should be very fast operation.
+Not advisable to spend time and resources to create sstemnye obetov that e will ispolzovny.
+Therefore, only transferred the name slot Klas, which is created only when needed.
+These cases otnositsyaya data exchange between local and permanent storage schtchika.
+Slots neobhoimosti as Counter can not know about how to store data in permanent storage and how to access them.
+To prevent the fit and race, we need a mechanism locks.
+In the presence of blocking processes have not been granted exclusive rights
+to the data will be written to a temporary location,
+and process set the lock at the end of their work inkrimentiruet meter data from the temporary storage
 
-When you reset the data in permanent storage on the condition dostezheniya multiplicity counter value ($ this-> Val% $ this-> upd_delim), lock is not required because in this case (for sufficiently large $ this-> upd_delim) at the current time only one process comes to the details please reset
+When you reset the data in permanent storage on the condition dostezheniya
+multiplicity counter value ($ this-> Val% $ this-> upd_delim),
+lock is not required because in this case (for sufficiently large $ this-> upd_delim)
+at the current time only one process comes to the details please reset.
 
 Example of use: 
 $cnt = new Counter('anykey', 'AnySlot',15); 
-echo $cnt->increment(); 
-echo $cnt->get(); 
+echo $cnt->increment();
+echo $cnt->get();
 echo $cnt->set(11);
 
-REDME on Russian see: http://www.valmat.ru/2010/10/github.html
+README on Russian see: http://www.valmat.ru/2010/10/github.html
