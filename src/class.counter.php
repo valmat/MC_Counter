@@ -35,8 +35,8 @@ class Counter {
     /**
       *  Memcache parametrs 
       */
-    const MC_HOST    = 'unix:///tmp/memcached.socket';
-    const MC_PORT    = 0;
+    const MC_HOST    = MEMCACHE_HOST;
+    const MC_PORT    = MEMCACHE_PORT;
     
     private static $memcache=null;
     
@@ -45,21 +45,21 @@ class Counter {
      *  var set as default should be redefined
      *  @var string
      */
-    const  NAME_SPACE = COUNTER_NAME_SPACE;
+    const  NAME_SPACE     = COUNTER_NAME_SPACE;
     const  LAST_DUMP_PREF = 'ld_';
     /**
       * ѕрефикс дл€ формировани€ ключа блокировки
       */
-    const LOCK_PREF = COUNTER_LOCK_PREF;
+    const LOCK_PREF       = COUNTER_LOCK_PREF;
     /**
       * ¬рем€ жизни ключа блокировки. ≈сли во врем€ перестроени€ кеша процесс аварийно завершитс€,
       * то блокировка останетс€ включенной и другие процессы будут продолжать выдавать протухший кеш LOCK_TIME секунд.
       * — другой стороны если срок блокировки истечет до того, как кеш будет перестроен, то возникнет состо€ние гонки и блокировочный механизм перестанет работать.
       * “.е. LOCK_TIME нужно устанавливать таким, что бы кеш точно успел быть построен, и не слишком больши, что бы протухание кеша было заметно в выдаче клиенту
       */
-    const LOCK_TIME = COUNTER_LOCK_TIME;
+    const LOCK_TIME       = COUNTER_LOCK_TIME;
     
-    const SLOT_PATH = COUNTER_SLOT_PATH;
+    const SLOT_PATH       = COUNTER_SLOT_PATH;
     
     /**
       * –азделитель дл€ сохранени€ локального значени€ в глобальное
