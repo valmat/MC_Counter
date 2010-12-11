@@ -7,7 +7,7 @@
     * Можно реализовать сохранение по заданному интервалу времени
     *
     * Конструктор принимает три аргумента: ключ, имя слота, и идентификатор для инициализации слота.
-    * Для чего это сделано: инримент счетчика должен быть очень быстрой операцией.
+    * Для чего это сделано: инкремент счетчика должен быть очень быстрой операцией.
     * Не целесообразно тратить время и сстемные ресурсы на создание объетов, которые е будут использовны.
     * Поэтому передается только имя слот класа, который создается только в случае необходимости.
     * К таким случаям относитсяя обмен данными между локальным и постоянным хранилищем счтчика.
@@ -79,6 +79,7 @@ class Counter {
         $this->ld_Key   = self::NAME_SPACE . self::LAST_DUMP_PREF . $Key;
         $this->SlotName = $SlotName;
         $this->SlotArg  = $SlotArg;
+        //$this->upd_delim= call_user_func($this->SlotName .'::delim');
     }
     
     /*
@@ -110,7 +111,7 @@ class Counter {
                # Получаем данные из постоянного хранилища, увеличиваем на 1 и сохраняет в локальное хранилище
                $this->Val = call_user_func($this->SlotName .'::get', $this->SlotArg);
                self::$memcache->add($this->Key, $this->Val, false);
-               # После создания ключа $this->Key, другие процессы уже не будут писать в (self::LOCK_PREF . $this->Key) и можно
+               # После создания ключа $this->Key, другие процессы уже будут писать в (self::LOCK_PREF . $this->Key) и можно
                # Не опасаться состояния гонки по этому ключу
                $difVal = (int) self::$memcache->get(self::LOCK_PREF . $this->Key);
                self::$memcache->delete(self::LOCK_PREF . $this->Key);
@@ -124,11 +125,12 @@ class Counter {
             
             return $this->Val;
         }
-        
+        //echo 'DUMP[' . $this->Val , '][' , $this->upd_delim ,' %: ';//.($this->Val%$this->upd_delim);
         # Обновляем данные постоянного хранилища по данным локального хранилища
-        if(0 == $this->Val%$this->upd_delim){
+        if($this->upd_delim > 0 && 0 == $this->Val%$this->upd_delim){
             if(!defined('COUNTER_SLOT_REQUIRED'))
                require self::SLOT_PATH;
+               //echo '<h2>DUMP</h2>';
                
             call_user_func($this->SlotName .'::set', $this->SlotArg, $this->Val);
         }
@@ -166,12 +168,12 @@ class Counter {
      * @return void
      */
     function set_updelim($var) {
-        if($var>0)
+        if($var>-1)
             $this->upd_delim = $var;
     }
     
 }
 
-
+//require Counter::SLOT_PATH;
 
 ?>
