@@ -58,7 +58,7 @@ class Counter {
     /**
       * Разделитель для сохранения локального значения в глобальное
       */
-    private $upd_delim = CONFIG_Counter::UPD_DELUM;
+    private $upd_delim;
     private $Key;
     private $Val;
     private $SlotName;

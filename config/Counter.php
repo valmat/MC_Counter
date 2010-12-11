@@ -25,11 +25,5 @@
           *  Путь к слотам счетчика
           */
         const SLOT_PATH = './src/data/counter_slots.php';
-
-        /**
-          *  Default upd_delum value
-          *  upd_delum - is upd interval for save in external storege
-          */
-        const UPD_DELUM = 50;
     } 
 ?>
