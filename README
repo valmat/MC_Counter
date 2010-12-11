@@ -21,7 +21,7 @@ lock is not required because in this case (for sufficiently large $ this-> upd_d
 at the current time only one process comes to the details please reset.
 
 Example of use: 
-$cnt = new Counter('anykey', 'AnySlot',15); 
+$cnt = new Counter('AnySlot'); 
 echo $cnt->increment();
 echo $cnt->get();
 echo $cnt->set(11);
