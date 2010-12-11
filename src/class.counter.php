@@ -19,10 +19,12 @@
     * При сбросе данных в постоянное хранилище по условию достежения кратности значения счетчика ($this->Val%$this->upd_delim),
     * блокировка не требуется, т.к. в этом случае (при достаточно большом значении $this->upd_delim) в текущий момент времени только один процесс
     * приходит к неоходимости сброса данных
+    *
+    * Если сброс данных в постаянное хранилище не предусмотрен, то в слоте метод delim() должен возвращать 0
     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     * Пример использования:
     *
-    *  $cnt = new Counter('anykey', 'AnySlot',15);
+    *  $cnt = new Counter('AnySlot');
     *  echo $cnt->increment();
     *  echo $cnt->get();
     *  echo $cnt->set(11);
@@ -39,11 +41,12 @@ class Counter {
      *  var set as default should be redefined
      */
     const  NAME_SPACE     = CONFIG_Counter::NAME_SPACE;
-    const  LAST_DUMP_PREF = 'ld_';
+    
     /**
       * Префикс для формирования ключа блокировки
       */
     const LOCK_PREF       = CONFIG_Counter::LOCK_PREF;
+    
     /**
       * Время жизни ключа блокировки. Если во время перестроения кеша процесс аварийно завершится,
       * то блокировка останется включенной и другие процессы будут продолжать выдавать протухший кеш LOCK_TIME секунд.
@@ -52,17 +55,13 @@ class Counter {
       */
     const LOCK_TIME       = CONFIG_Counter::LOCK_TIME;
     
-    const SLOT_PATH       = CONFIG_Counter::SLOT_PATH;
-    
     /**
       * Разделитель для сохранения локального значения в глобальное
       */
     private $upd_delim = CONFIG_Counter::UPD_DELUM;
     private $Key;
-    private $ld_Key;
     private $Val;
     private $SlotName;
-    private $SlotArg;
     
     /**
       * Флаг установленной блокировки
@@ -72,14 +71,11 @@ class Counter {
       */
     private        $is_locked = false;
     
-
-    function __construct($Key, $SlotName, $SlotArg) {
+    function __construct($SlotName) {
         self::$memcache = Mcache::init();
-        $this->Key      = self::NAME_SPACE . $Key;
-        $this->ld_Key   = self::NAME_SPACE . self::LAST_DUMP_PREF . $Key;
         $this->SlotName = $SlotName;
-        $this->SlotArg  = $SlotArg;
-        //$this->upd_delim= call_user_func($this->SlotName .'::delim');
+        $this->Key      = self::NAME_SPACE . call_user_func($this->SlotName .'::key');;
+        $this->upd_delim= call_user_func($this->SlotName .'::delim');
     }
     
     /*
@@ -105,11 +101,8 @@ class Counter {
         if(false==$this->Val){
             # Проверяем установил ли текущий процесс блокировку на эксклюзивное получение данных
             if( $this->set_lock() ){
-               if(!defined('COUNTER_SLOT_REQUIRED'))
-                  require self::SLOT_PATH;
-               
                # Получаем данные из постоянного хранилища, увеличиваем на 1 и сохраняет в локальное хранилище
-               $this->Val = call_user_func($this->SlotName .'::get', $this->SlotArg);
+               $this->Val = call_user_func($this->SlotName .'::get');
                self::$memcache->add($this->Key, $this->Val, false);
                # После создания ключа $this->Key, другие процессы уже будут писать в (self::LOCK_PREF . $this->Key) и можно
                # Не опасаться состояния гонки по этому ключу
@@ -125,14 +118,10 @@ class Counter {
             
             return $this->Val;
         }
-        //echo 'DUMP[' . $this->Val , '][' , $this->upd_delim ,' %: ';//.($this->Val%$this->upd_delim);
+        
         # Обновляем данные постоянного хранилища по данным локального хранилища
         if($this->upd_delim > 0 && 0 == $this->Val%$this->upd_delim){
-            if(!defined('COUNTER_SLOT_REQUIRED'))
-               require self::SLOT_PATH;
-               //echo '<h2>DUMP</h2>';
-               
-            call_user_func($this->SlotName .'::set', $this->SlotArg, $this->Val);
+            call_user_func($this->SlotName .'::set', $this->Val);
         }
         return $this->Val;
     }
@@ -146,9 +135,7 @@ class Counter {
      */
     function set($newVal){
         self::$memcache->set($this->Key, $this->Val=$newVal, false);
-        if(!defined('COUNTER_SLOT_REQUIRED'))
-           require self::SLOT_PATH;
-        call_user_func($this->SlotName .'::set', $this->SlotArg, $this->Val);
+        call_user_func($this->SlotName .'::set', $this->Val);
     }
     
     /*
@@ -174,6 +161,53 @@ class Counter {
     
 }
 
-//require Counter::SLOT_PATH;
+
+
+/*******************************************************************************
+ * Интерфейс для слота счетчика.
+ * 
+ */
+
+interface Counter_Slot_Interface
+ {
+    /*
+     * Set counter value at hard storage
+     * function set
+     * @param $val integer
+     * @return void
+     */
+    static function set($val);
+    
+    /*
+     * Get counter value from hard storage
+     * function name
+     * @param void
+     * @return integer
+     */
+    static function get();
+    
+    /*
+     * Return integer no negative delimiter for save in hard storage
+     * function dilim
+     * @param void
+     * @return integer
+     */
+    static function delim();
+    
+    /*
+     * Return slot key. Use in memcache, and posible hard, storage
+     * function name
+     * @param void
+     * @return string
+     */
+    static function key();
+ }
+
+/*******************************************************************************
+ * requere slots
+ * 
+ */
+
+ require CONFIG_Counter::SLOT_PATH;
 
 ?>

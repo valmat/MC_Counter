@@ -1,18 +1,4 @@
 <?php
- define('COUNTER_SLOT_REQUIRED',TRUE);
-
-/**
- * Интерфейс для счетчика.
- * 
- */
-
-interface Counter_Slot_Interface
- {
-    static function set($id, $val);
-    static function get($id);
-    static function delim();
-    static function key();
- }
 
 ################################################################################
  /*
@@ -27,14 +13,16 @@ interface Counter_Slot_Interface
     
     private function __construct() {}
     
-    static function set($id, $val){
+    static function set($val){
+        $id = self::key();
         echo "<hr>_update($id,$val):<pre>";
         var_export($val);
         echo '</pre><hr>';
         file_put_contents(self::CNTR_FILE_PREF.$id.'.txt',$val);
     }
 
-    static function get($id){
+    static function get(){
+        $id = self::key();
         echo '<hr><h1>';
         var_export($id);
         echo '</h1><hr>';
@@ -47,7 +35,7 @@ interface Counter_Slot_Interface
     }
     
     static function delim(){
-      return 0;
+      return 4;
     }
     
     static function key(){
