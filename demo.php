@@ -15,7 +15,6 @@ function microtime_float(){
   *   __autoload
   */
    function __autoload($ClassName){
-       //require_once PATH_CLASS.'/class.'.strtolower($ClassName).'.php';
        require './src/class.'.strtolower($ClassName).'.php';
     }
 ################################################################################

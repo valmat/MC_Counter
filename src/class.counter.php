@@ -32,39 +32,32 @@
 
 class Counter {
     
-    /**
-      *  Memcache parametrs 
-      */
-    const MC_HOST    = MEMCACHE_HOST;
-    const MC_PORT    = MEMCACHE_PORT;
-    
     private static $memcache=null;
     
     /**
      *  NameSpase prefix for counter key
      *  var set as default should be redefined
-     *  @var string
      */
-    const  NAME_SPACE     = COUNTER_NAME_SPACE;
+    const  NAME_SPACE     = CONFIG_Counter::NAME_SPACE;
     const  LAST_DUMP_PREF = 'ld_';
     /**
       * ѕрефикс дл€ формировани€ ключа блокировки
       */
-    const LOCK_PREF       = COUNTER_LOCK_PREF;
+    const LOCK_PREF       = CONFIG_Counter::LOCK_PREF;
     /**
       * ¬рем€ жизни ключа блокировки. ≈сли во врем€ перестроени€ кеша процесс аварийно завершитс€,
       * то блокировка останетс€ включенной и другие процессы будут продолжать выдавать протухший кеш LOCK_TIME секунд.
       * — другой стороны если срок блокировки истечет до того, как кеш будет перестроен, то возникнет состо€ние гонки и блокировочный механизм перестанет работать.
       * “.е. LOCK_TIME нужно устанавливать таким, что бы кеш точно успел быть построен, и не слишком больши, что бы протухание кеша было заметно в выдаче клиенту
       */
-    const LOCK_TIME       = COUNTER_LOCK_TIME;
+    const LOCK_TIME       = CONFIG_Counter::LOCK_TIME;
     
-    const SLOT_PATH       = COUNTER_SLOT_PATH;
+    const SLOT_PATH       = CONFIG_Counter::SLOT_PATH;
     
     /**
       * –азделитель дл€ сохранени€ локального значени€ в глобальное
       */
-    private $upd_delim = COUNTER_UPD_DELUM;
+    private $upd_delim = CONFIG_Counter::UPD_DELUM;
     private $Key;
     private $ld_Key;
     private $Val;
@@ -81,10 +74,7 @@ class Counter {
     
 
     function __construct($Key, $SlotName, $SlotArg) {
-        if(null===self::$memcache){
-           self::$memcache = new Memcache;
-           self::$memcache->connect(self::MC_HOST, self::MC_PORT);
-        }
+        self::$memcache = Mcache::init();
         $this->Key      = self::NAME_SPACE . $Key;
         $this->ld_Key   = self::NAME_SPACE . self::LAST_DUMP_PREF . $Key;
         $this->SlotName = $SlotName;
