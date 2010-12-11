@@ -10,6 +10,8 @@ interface Counter_Slot_Interface
  {
     static function set($id, $val);
     static function get($id);
+    static function delim();
+    static function key();
  }
 
 ################################################################################
@@ -42,6 +44,14 @@ interface Counter_Slot_Interface
          return 0;
       }
       return (int) file_get_contents(self::CNTR_FILE_PREF.$id.'.txt');
+    }
+    
+    static function delim(){
+      return 0;
+    }
+    
+    static function key(){
+      return 'anykey';
     }
  }
 ?>
