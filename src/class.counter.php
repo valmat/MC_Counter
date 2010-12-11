@@ -103,7 +103,7 @@ class Counter {
             if( $this->set_lock() ){
                # Получаем данные из постоянного хранилища, увеличиваем на 1 и сохраняет в локальное хранилище
                $this->Val = call_user_func($this->SlotName .'::get');
-               self::$memcache->add($this->Key, $this->Val, false);
+               self::$memcache->add($this->Key, $this->Val, false, call_user_func($this->SlotName .'::expire') );
                # После создания ключа $this->Key, другие процессы уже будут писать в (self::LOCK_PREF . $this->Key) и можно
                # Не опасаться состояния гонки по этому ключу
                $difVal = (int) self::$memcache->get(self::LOCK_PREF . $this->Key);
@@ -134,7 +134,7 @@ class Counter {
      * @return     int     counter value
      */
     function set($newVal){
-        self::$memcache->set($this->Key, $this->Val=$newVal, false);
+        self::$memcache->set($this->Key, $this->Val=$newVal, false, call_user_func($this->SlotName .'::expire') );
         call_user_func($this->SlotName .'::set', $this->Val);
     }
     
@@ -201,6 +201,14 @@ interface Counter_Slot_Interface
      * @return string
      */
     static function key();
+    
+    /*
+     * Return expire slot in sec. Default 0.
+     * function name
+     * @param void
+     * @return string
+     */
+    static function expire();
  }
 
 /*******************************************************************************

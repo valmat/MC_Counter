@@ -41,5 +41,9 @@
     static function key(){
       return 'anykey';
     }
+    
+    static function expire(){
+      return 0;
+    }
  }
 ?>
