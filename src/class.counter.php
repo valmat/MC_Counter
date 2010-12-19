@@ -73,7 +73,7 @@ class Counter {
     
     function __construct($SlotName) {
         self::$memcache = Mcache::init();
-        $this->SlotName = $SlotName;
+        $this->SlotName = 'Counter_Slot_' . $SlotName;
         $this->Key      = self::NAME_SPACE . call_user_func($this->SlotName .'::key');;
         $this->upd_delim= call_user_func($this->SlotName .'::delim');
     }

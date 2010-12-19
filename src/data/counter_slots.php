@@ -6,7 +6,7 @@
   * class AnySlot
   */
  
- class AnySlot implements Counter_Slot_Interface {
+ class Counter_Slot_AnySlot implements Counter_Slot_Interface {
     
 
     const CNTR_FILE_PREF = '/tmp/anycntr_';
