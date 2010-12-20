@@ -82,13 +82,6 @@ class Counter {
     private        $is_locked = false;
     
     function __construct($SlotName, $id=null) {
-        /*
-        $params = NULL;
-        if( func_num_args() > 1 ){
-            $params = func_get_args();
-            array_shift($params);
-        }
-        */
         self::$memcache = Mcache::init();
         $this->SlotName = 'Counter_Slot_' . $SlotName;
         $this->SlotKey  = call_user_func($this->SlotName .'::key', $id);
