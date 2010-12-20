@@ -16,7 +16,7 @@ function microtime_float(){
 
  $time_start = microtime_float();
  
- $cnt = new Counter('AnySlot');
+ $cnt = new Counter('AnySlot',15);
   
  //$cnt->set_updelim(0);
  echo '<h2>'.$cnt->increment().'</h2>';

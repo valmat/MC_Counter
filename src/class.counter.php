@@ -45,7 +45,7 @@ class Counter {
     /**
       * Префикс для формирования ключа блокировки
       */
-    const LOCK_PREF       = CONFIG_Counter::LOCK_PREF;
+    const  LOCK_PREF       = CONFIG_Counter::LOCK_PREF;
     
     /**
       * Время жизни ключа блокировки. Если во время перестроения кеша процесс аварийно завершится,
@@ -53,13 +53,23 @@ class Counter {
       * С другой стороны если срок блокировки истечет до того, как кеш будет перестроен, то возникнет состояние гонки и блокировочный механизм перестанет работать.
       * Т.е. LOCK_TIME нужно устанавливать таким, что бы кеш точно успел быть построен, и не слишком больши, что бы протухание кеша было заметно в выдаче клиенту
       */
-    const LOCK_TIME       = CONFIG_Counter::LOCK_TIME;
+    const  LOCK_TIME       = CONFIG_Counter::LOCK_TIME;
     
     /**
       * Разделитель для сохранения локального значения в глобальное
       */
     private $upd_delim;
+    
+    /**
+      *  Ключ счетчика 
+      */
     private $Key;
+    
+    /**
+      *  Ключ слота (для передачи в слот) 
+      */
+    private $SlotKey;
+    
     private $Val;
     private $SlotName;
     
@@ -71,10 +81,18 @@ class Counter {
       */
     private        $is_locked = false;
     
-    function __construct($SlotName) {
+    function __construct($SlotName, $id=null) {
+        /*
+        $params = NULL;
+        if( func_num_args() > 1 ){
+            $params = func_get_args();
+            array_shift($params);
+        }
+        */
         self::$memcache = Mcache::init();
         $this->SlotName = 'Counter_Slot_' . $SlotName;
-        $this->Key      = self::NAME_SPACE . call_user_func($this->SlotName .'::key');;
+        $this->SlotKey  = call_user_func($this->SlotName .'::key', $id);
+        $this->Key      = self::NAME_SPACE . $this->SlotKey;
         $this->upd_delim= call_user_func($this->SlotName .'::delim');
     }
     
@@ -102,7 +120,7 @@ class Counter {
             # Проверяем установил ли текущий процесс блокировку на эксклюзивное получение данных
             if( $this->set_lock() ){
                # Получаем данные из постоянного хранилища, увеличиваем на 1 и сохраняет в локальное хранилище
-               $this->Val = call_user_func($this->SlotName .'::get');
+               $this->Val = call_user_func($this->SlotName .'::get', $this->SlotKey);
                self::$memcache->add($this->Key, $this->Val, false, call_user_func($this->SlotName .'::expire') );
                # После создания ключа $this->Key, другие процессы уже будут писать в (self::LOCK_PREF . $this->Key) и можно
                # Не опасаться состояния гонки по этому ключу
@@ -121,7 +139,7 @@ class Counter {
         
         # Обновляем данные постоянного хранилища по данным локального хранилища
         if($this->upd_delim > 0 && 0 == $this->Val%$this->upd_delim){
-            call_user_func($this->SlotName .'::set', $this->Val);
+            call_user_func($this->SlotName .'::set',$this->SlotKey, $this->Val);
         }
         return $this->Val;
     }
@@ -135,7 +153,7 @@ class Counter {
      */
     function set($newVal){
         self::$memcache->set($this->Key, $this->Val=$newVal, false, call_user_func($this->SlotName .'::expire') );
-        call_user_func($this->SlotName .'::set', $this->Val);
+        call_user_func($this->SlotName .'::set', $this->SlotKey, $this->Val);
     }
     
     /*
@@ -173,18 +191,19 @@ interface Counter_Slot_Interface
     /*
      * Set counter value at hard storage
      * function set
+     * @param $key string
      * @param $val integer
      * @return void
      */
-    static function set($val);
+    static function set($key, $val);
     
     /*
      * Get counter value from hard storage
      * function name
-     * @param void
+     * @param $key string
      * @return integer
      */
-    static function get();
+    static function get($key);
     
     /*
      * Return integer no negative delimiter for save in hard storage
@@ -197,7 +216,7 @@ interface Counter_Slot_Interface
     /*
      * Return slot key. Use in memcache, and posible hard, storage
      * function name
-     * @param void
+     * @param void or params
      * @return string
      */
     static function key();

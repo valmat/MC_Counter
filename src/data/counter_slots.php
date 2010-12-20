@@ -13,16 +13,16 @@
     
     private function __construct() {}
     
-    static function set($val){
-        $id = self::key();
+    static function set($id, $val){
+        //$id = self::key();
         echo "<hr>_update($id,$val):<pre>";
         var_export($val);
         echo '</pre><hr>';
         file_put_contents(self::CNTR_FILE_PREF.$id.'.txt',$val);
     }
 
-    static function get(){
-        $id = self::key();
+    static function get($id){
+        //$id = self::key();
         echo '<hr><h1>';
         var_export($id);
         echo '</h1><hr>';
@@ -38,8 +38,11 @@
       return 4;
     }
     
-    static function key(){
-      return 'anykey';
+    static function key($id=null){
+      echo "<hr><pre>";
+      var_export($id);
+      echo "<hr></pre>";
+      return 'anykey'.$id;
     }
     
     static function expire(){
