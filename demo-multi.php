@@ -42,6 +42,7 @@
 	$keys = array_keys(array_fill(1,$CNT,1));
 	echo "<hr><pre>";
 	var_export( Counter::mget('AnySlot',$keys) );
+	//var_export( Counter::mget('AnySlot',$keys, TRUE) );
 	echo '</pre><hr>';
     }
     

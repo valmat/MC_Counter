@@ -158,29 +158,42 @@ class Counter {
      * @return           int     counter value
      */
     function get(){
-        return (int)( $this->Val = $this->memstore->get($this->Key) );
+        if(false===( $this->Val = $this->memstore->get($this->Key) )) {
+            $this->Val = $this->Slot->get();
+            $this->memstore->add($this->Key, $this->Val, $this->Slot->expire() );
+        }
+        return $this->Val;
     }
     
     /*
      * Получить значение кеша если есть, или false, если отсутствует.
      * function get
      * @param  $keys array
+     * @param  $fillZero bool fill by zero, if not exist
      * @return array counter values
      */
-    static function mget($SlotName, $keys) {
+    static function mget($SlotName, $keys, $fillZero = false) {
         $pf =  '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
         
-        $rez = array_fill_keys($keys, 0);
+        $rez = $fillZero ? array_fill_keys($keys, 0) : array();
+        
         $keys = array_combine($keys, array_map(
             function($id) use($pf) {
                 return $id . $pf;
             }, $keys));
         $reKeys = array_flip($keys);
         
-        $SlotName = 'Counter_Slot_' . $SlotName;
-        foreach($SlotName::memstore()->get($keys) as $k => $v) {
+        $SlotClName = 'Counter_Slot_' . $SlotName;
+        foreach($SlotClName::memstore()->get($keys) as $k => $v) {
             $rez[$reKeys[$k]] = $v;
         }
+        
+        if(!$fillZero)
+        foreach(array_diff_key($keys,$rez) as $k => $v) {
+	    $cnt = new Counter($SlotName, $k);
+	    $rez[$k] = $cnt->get();
+        }
+        
         return $rez;
     }
     
