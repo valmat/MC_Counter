@@ -205,7 +205,7 @@ class Mcache implements Memstore_incremented_Interface {
 }
 
 /*******************************************************************************
-  *  class RedisCache
+  *  class RedisCounter
   *  create on Memcache object for use in difference project construction
   *  for prevention multi memcache connect
   */
@@ -252,7 +252,7 @@ class RedisCounter implements Memstore_incremented_Interface {
      * @return bool
      */
     public function add($key, $data, $ttl = 0) {
-	return self::$r->add($key, $value, $ttl);
+	return self::$r->add($key, $data, $ttl);
     }
     
     /*
