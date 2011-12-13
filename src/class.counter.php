@@ -34,7 +34,7 @@
 
 class Counter {
     
-    private static $memcache=null;
+    private $memcache = NULL;
     
     /**
      *  NameSpase prefix for counter key
@@ -68,25 +68,27 @@ class Counter {
     /**
       *  Ключ слота (для передачи в слот) 
       */
-    private $SlotKey;
-    
     private $Val;
-    private $SlotName;
+    private $Slot;
     
     /**
       * Флаг установленной блокировки
       * После установки этот флаг помечается в 1
-      * В методе set проверяется данный флаг, и только если он установлен, тогда снимается блокировка [self::$memcache->delete(self::LOCK_PREF . $CacheKey)]
+      * В методе set проверяется данный флаг, и только если он установлен, тогда снимается блокировка [$this->memstore->delete(self::LOCK_PREF . $CacheKey)]
       * Затем флаг блокировки должен быть снят: $this->is_locked = false;
       */
     private        $is_locked = false;
     
-    function __construct($SlotName, $id=null) {
-        self::$memcache = Mcache::init();
-        $this->SlotName = 'Counter_Slot_' . $SlotName;
-        $this->SlotKey  = call_user_func($this->SlotName .'::key', $id);
-        $this->Key      = self::NAME_SPACE . $this->SlotKey;
-        $this->upd_delim= call_user_func($this->SlotName .'::delim');
+    function __construct($SlotName, $id = NULL) {
+        $this->Key = $id . '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
+        
+        $SlotName = 'Counter_Slot_' . $SlotName;
+        $Slot = new $SlotName($id);
+        
+        $this->memstore  = $Slot->memstore();
+        $this->upd_delim = $Slot->delim();
+        $this->Slot      = $Slot;
+        
     }
     
     /*
@@ -96,8 +98,8 @@ class Counter {
      * @param $arg void
      */
     private function set_lock() {
-        if( !($this->is_locked) && !(self::$memcache->get(self::LOCK_PREF . $this->Key)) )
-           $this->is_locked = self::$memcache->add(self::LOCK_PREF . $this->Key,1,false,self::LOCK_TIME);
+        if( !($this->is_locked) && !($this->memstore->get(self::LOCK_PREF . $this->Key)) )
+            $this->is_locked = $this->memstore->add(self::LOCK_PREF . $this->Key,1,self::LOCK_TIME);
         return $this->is_locked;
     }
         
@@ -107,32 +109,32 @@ class Counter {
      * @param $Key   string
      */
     function increment(){
-        $this->Val = self::$memcache->increment($this->Key);
+        $this->Val = $this->memstore->increment($this->Key);
         
-        if(false==$this->Val){
+        if(false===$this->Val){
             # Проверяем установил ли текущий процесс блокировку на эксклюзивное получение данных
             if( $this->set_lock() ){
                # Получаем данные из постоянного хранилища, увеличиваем на 1 и сохраняет в локальное хранилище
-               $this->Val = call_user_func($this->SlotName .'::get', $this->SlotKey);
-               self::$memcache->add($this->Key, $this->Val, false, call_user_func($this->SlotName .'::expire') );
+               $this->Val = $this->Slot->get();
+               $this->memstore->add($this->Key, $this->Val, $this->Slot->expire() );
                # После создания ключа $this->Key, другие процессы уже будут писать в (self::LOCK_PREF . $this->Key) и можно
                # Не опасаться состояния гонки по этому ключу
-               $difVal = (int) self::$memcache->get(self::LOCK_PREF . $this->Key);
-               self::$memcache->delete(self::LOCK_PREF . $this->Key);
+               $difVal = (int) $this->memstore->get(self::LOCK_PREF . $this->Key);
+               $this->memstore->del(self::LOCK_PREF . $this->Key);
                # Скидываем в основной счетчик все что накопилось во временном хранилище, пока мы получали данные из глобального хранилища
-               self::$memcache->increment($this->Key, $difVal);
+               $this->memstore->increment($this->Key, $difVal);
                
             }else{
                 # Если блокировку установил другой процесс, инкрементируем во временном хранилище счетчика
-                self::$memcache->increment(self::LOCK_PREF . $this->Key);
+                $this->memstore->increment(self::LOCK_PREF . $this->Key);
             }
             
             return $this->Val;
         }
         
         # Обновляем данные постоянного хранилища по данным локального хранилища
-        if($this->upd_delim > 0 && 0 == $this->Val%$this->upd_delim){
-            call_user_func($this->SlotName .'::set',$this->SlotKey, $this->Val);
+        if($this->upd_delim && 0 == $this->Val%$this->upd_delim){
+            $this->Slot->set($this->Val);
         }
         return $this->Val;
     }
@@ -145,8 +147,8 @@ class Counter {
      * @return     int     counter value
      */
     function set($newVal){
-        self::$memcache->set($this->Key, $this->Val=$newVal, false, call_user_func($this->SlotName .'::expire') );
-        call_user_func($this->SlotName .'::set', $this->SlotKey, $this->Val);
+        $this->memstore->set($this->Key, $this->Val=$newVal, $this->Slot->expire() );
+        $this->Slot->set($this->Val);
     }
     
     /*
@@ -156,7 +158,43 @@ class Counter {
      * @return           int     counter value
      */
     function get(){
-        return ( $this->Val = self::$memcache->get($this->Key) );
+        if(false===( $this->Val = $this->memstore->get($this->Key) )) {
+            $this->Val = $this->Slot->get();
+            $this->memstore->add($this->Key, $this->Val, $this->Slot->expire() );
+        }
+        return $this->Val;
+    }
+    
+    /*
+     * Получить значение кеша если есть, или false, если отсутствует.
+     * function get
+     * @param  $keys array
+     * @param  $fillZero bool fill by zero, if not exist
+     * @return array counter values
+     */
+    static function mget($SlotName, $keys, $fillZero = false) {
+        $pf =  '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
+        
+        $rez = $fillZero ? array_fill_keys($keys, 0) : array();
+        
+        $keys = array_combine($keys, array_map(
+            function($id) use($pf) {
+                return $id . $pf;
+            }, $keys));
+        $reKeys = array_flip($keys);
+        
+        $SlotClName = 'Counter_Slot_' . $SlotName;
+        foreach($SlotClName::memstore()->get($keys) as $k => $v) {
+            $rez[$reKeys[$k]] = $v;
+        }
+        
+        if(!$fillZero)
+        foreach(array_diff_key($keys,$rez) as $k => $v) {
+	    $cnt = new Counter($SlotName, $k);
+	    $rez[$k] = $cnt->get();
+        }
+        
+        return $rez;
     }
     
     /*
@@ -188,15 +226,15 @@ interface Counter_Slot_Interface
      * @param $val integer
      * @return void
      */
-    static function set($key, $val);
+    public function set($val);
     
     /*
      * Get counter value from hard storage
-     * function name
+     * function get
      * @param $key string
      * @return integer
      */
-    static function get($key);
+    public function get();
     
     /*
      * Return integer no negative delimiter for save in hard storage
@@ -204,23 +242,24 @@ interface Counter_Slot_Interface
      * @param void
      * @return integer
      */
-    static function delim();
-    
-    /*
-     * Return slot key. Use in memcache, and posible hard, storage
-     * function name
-     * @param void or params
-     * @return string
-     */
-    static function key();
+    public function delim();
     
     /*
      * Return expire slot in sec. Default 0.
-     * function name
+     * function expire
      * @param void
      * @return string
      */
-    static function expire();
+    public function expire();
+    
+    /*
+     * Return memstore
+     * function memstore
+     * @param void
+     * @return Memstore_incremented_Interface
+     */
+    public function memstore();
+    
  }
 
 /*******************************************************************************
