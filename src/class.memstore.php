@@ -77,7 +77,6 @@ interface Memstore_Interface {
      */
     public function del($key);
     
-    
 }
 
 
@@ -117,6 +116,12 @@ interface Memstore_incremented_Interface {
      */
     public function del($key);
     
+    /*
+     * @param $key string
+     * @param $step int
+     * @return int
+     */
+    public function increment($key, $step = 1);
     
 }
 
@@ -126,7 +131,7 @@ interface Memstore_incremented_Interface {
   *  for prevention multi memcache connect
   */
 
-class Mcache implements Memstore_Interface {
+class Mcache implements Memstore_incremented_Interface {
     
     const  HOST = 'unix:///tmp/memcached.socket';
     const  PORT = 0;
@@ -186,6 +191,17 @@ class Mcache implements Memstore_Interface {
 	return self::$memcache->delete($key, 0);
     }
     
+    /*
+     * @param $key string
+     * @param $step int
+     * @return int
+     */
+    public function increment($key, $step = 1) {
+	return (1 == $step) ? 
+	self::$memcache->increment($key):
+	self::$memcache->increment($key, $step);
+    }
+    
 }
 
 /*******************************************************************************
@@ -194,7 +210,7 @@ class Mcache implements Memstore_Interface {
   *  for prevention multi memcache connect
   */
 
-class RedisCache implements Memstore_Interface {
+class RedisCache implements Memstore_incremented_Interface {
     
     const HOST = 'unix:///tmp/redis.sock';
     const PORT = 0;
@@ -269,6 +285,17 @@ class RedisCache implements Memstore_Interface {
      */
     public function del($key) {
 	return (bool)self::$r->delete($key);
+    }
+    
+    /*
+     * @param $key string
+     * @param $step int
+     * @return int
+     */
+    public function increment($key, $step = 1) {
+	return (1 == $step) ? 
+	    self::$memcache->increment($key):
+	    self::$memcache->increment($key, $step);
     }
     
 }

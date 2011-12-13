@@ -1,52 +1,56 @@
 <?php
 
 ################################################################################
- /*
-  * для тестирования
-  * class AnySlot
-  */
- 
- class Counter_Slot_AnySlot implements Counter_Slot_Interface {
-    
+/*
+ * для тестирования
+ * class AnySlot
+ */
 
+class Counter_Slot_AnySlot implements Counter_Slot_Interface {
+    
     const CNTR_FILE_PREF = '/tmp/anycntr_';
+    private $id;
     
-    private function __construct() {}
+    public function __construct($id) {
+        $this->id = $id;
+    }
     
-    static function set($id, $val){
-        //$id = self::key();
-        echo "<hr>_update($id,$val):<pre>";
+    public function set($val) {
+        echo "<hr>set($val):<pre>";
         var_export($val);
         echo '</pre><hr>';
-        file_put_contents(self::CNTR_FILE_PREF.$id.'.txt',$val);
+        file_put_contents(self::CNTR_FILE_PREF.$this->id.'.txt', $val);
     }
-
-    static function get($id){
+    
+    public function get() {
         //$id = self::key();
         echo '<hr><h1>';
-        var_export($id);
+        var_export($this->id);
         echo '</h1><hr>';
         
-      if(!is_file(self::CNTR_FILE_PREF.$id.'.txt')){
-         file_put_contents(self::CNTR_FILE_PREF.$id.'.txt',0);
-         return 0;
-      }
-      return (int) file_get_contents(self::CNTR_FILE_PREF.$id.'.txt');
+        if(!is_file(self::CNTR_FILE_PREF.$this->id.'.txt')){
+            file_put_contents(self::CNTR_FILE_PREF.$this->id.'.txt',0);
+            return 0;
+        }
+        return (int) file_get_contents(self::CNTR_FILE_PREF.$this->id.'.txt');
     }
     
-    static function delim(){
-      return 4;
+    public function delim() {
+        return 4;
     }
     
-    static function key($id=null){
-      echo "<hr><pre>";
-      var_export($id);
-      echo "<hr></pre>";
-      return 'anykey'.$id;
+    public function expire() {
+        return 0;
     }
-    
-    static function expire(){
-      return 0;
+     
+    /*
+     * Return memstore
+     * function memstore
+     * @param void
+     * @return Memstore_incremented_Interface
+     */
+    public function memstore() {
+        return new Mcache();
     }
- }
-?>
+}
+
