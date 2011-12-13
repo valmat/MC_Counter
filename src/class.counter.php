@@ -115,7 +115,7 @@ class Counter {
     function increment(){
         $this->Val = $this->memstore->increment($this->Key);
         
-        if(false==$this->Val){
+        if(false===$this->Val){
             # ѕровер€ем установил ли текущий процесс блокировку на эксклюзивное получение данных
             if( $this->set_lock() ){
                # ѕолучаем данные из посто€нного хранилища, увеличиваем на 1 и сохран€ет в локальное хранилище

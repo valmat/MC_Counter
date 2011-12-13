@@ -70,7 +70,7 @@ class Redis {
     }
     
     private function cmd($command) {
-	//echo "<hr><pre style='color:blue'>";var_export($command);echo '</pre><hr>';
+	echo "<hr><pre style='color:blue'>";var_export($command);echo '</pre><hr>';
 	if (is_array($command)){
 	    # Use unified command format
 	    $s = '*'.count($command)."\r\n";
@@ -137,10 +137,15 @@ class Redis {
      */
     function get($key) {
 	if (is_array($key)) {
-	    array_unshift($key, "MGET");
-	    return $this->cmd ( $key );
+	    $keys = $key;
+	    array_unshift($key, 'MGET');
+	    return array_filter ( array_combine($keys, $this->cmd( $key )),
+		    function($v){
+			return (NULL!==$v);
+		    });
 	}
-	return $this->cmd ( array("GET", $key));
+	$rez = $this->cmd ( array("GET", $key));
+	return (NULL==$rez)? false : $rez;
     }
     
     /**
@@ -150,9 +155,11 @@ class Redis {
      * @return int this commands will reply with the new value of key after the increment or decrement. 
      */
     function incr($key, $step = 1) {
-	return (1 == $step) ? 
+	$rez = (1 == $step) ? 
 	    $this->cmd( array("INCR", $key) ) :
 	    $this->cmd( array("INCRBY",$key, $step) );
+	    
+	return (NULL===$rez) ? false : $rez;
     }
     
     /**
@@ -165,6 +172,15 @@ class Redis {
 	return (1 == $step) ? 
 	    $this->cmd( array("DECR", $key) ) :
 	    $this->cmd( array("DECRBY",$key, $step) );
+    }
+    
+    /**
+     * delete by key
+     * @param $key
+     * @return bool rezult
+     */
+    function del($key) {
+	return (bool) $this->cmd( array("DEL", $key) );
     }
     
     /**

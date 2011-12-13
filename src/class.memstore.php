@@ -210,7 +210,7 @@ class Mcache implements Memstore_incremented_Interface {
   *  for prevention multi memcache connect
   */
 
-class RedisCache implements Memstore_incremented_Interface {
+class RedisCounter implements Memstore_incremented_Interface {
     
     const HOST = 'unix:///tmp/redis.sock';
     const PORT = 0;
@@ -224,27 +224,12 @@ class RedisCache implements Memstore_incremented_Interface {
 	}
     }
     
-    public function __destruct() {
-	self::$r->quit();
-    }
-    
     /*
      * @param $key string or array
      * @return mixed
      */
     public function get($key) {
-	$rez = self::$r->get($key);
-	if(!is_array($key)) {
-	    return (NULL==$rez)? false : unserialize($rez);
-	}
-	$rez =
-	    array_map('unserialize',
-		array_filter ( array_combine($key, $rez),
-		    function($v){
-			return (NULL!==$v);
-		    })
-	    );
-	return $rez;
+	return self::$r->get($key);
     }
     
     /*
@@ -255,12 +240,7 @@ class RedisCache implements Memstore_incremented_Interface {
      * @return bool
      */
     public function set($key, $data, $ttl = 0) {
-	//return self::$r->set($key, $data);
-	$val = serialize($data);
-	return  'OK' ==
-		($ttl ?
-			self::$r->SETEX($key, $ttl, $val):
-			self::$r->set($key, $val));
+	return  self::$r->set($key, $data, $ttl);
     }
     
     /*
@@ -272,11 +252,7 @@ class RedisCache implements Memstore_incremented_Interface {
      * @return bool
      */
     public function add($key, $data, $ttl = 0) {
-	$val = serialize($data);
-	if( ($rez = self::$r->set($key, $val, true)) && $ttl ) {
-	    self::$r->SETEX($key, $ttl, $val);
-	}
-	return $rez;
+	return self::$r->add($key, $value, $ttl);
     }
     
     /*
@@ -284,7 +260,7 @@ class RedisCache implements Memstore_incremented_Interface {
      * @return bool
      */
     public function del($key) {
-	return (bool)self::$r->delete($key);
+	return self::$r->del($key);
     }
     
     /*
@@ -293,9 +269,7 @@ class RedisCache implements Memstore_incremented_Interface {
      * @return int
      */
     public function increment($key, $step = 1) {
-	return (1 == $step) ? 
-	    self::$memcache->increment($key):
-	    self::$memcache->increment($key, $step);
+	return self::$r->incr($key, $step);
     }
     
 }
