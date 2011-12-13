@@ -162,7 +162,7 @@ class Counter {
      * @return           int     counter value
      */
     function get(){
-        return ( $this->Val = $this->memstore->get($this->Key) );
+        return (int)( $this->Val = $this->memstore->get($this->Key) );
     }
     
     /*

@@ -16,10 +16,11 @@
     
     $time_start = microtime_float();
     
-    $cnt = new Counter('AnySlot',21);
+    $cnt = new Counter('AnySlot',22);
     //$cnt->set_updelim(0);
     
     echo '<h2>'.$cnt->increment().'</h2>';
+    //echo '<h2>'.$cnt->get().'</h2>';
     //echo $cnt->set(11);
     
     
