@@ -70,7 +70,7 @@ class Redis {
     }
     
     private function cmd($command) {
-	echo "<hr><pre style='color:blue'>";var_export($command);echo '</pre><hr>';
+	//echo "<hr><pre style='color:blue'>";var_export($command);echo '</pre><hr>';
 	if (is_array($command)){
 	    # Use unified command format
 	    $s = '*'.count($command)."\r\n";
@@ -169,9 +169,10 @@ class Redis {
      * @return int this commands will reply with the new value of key after the increment or decrement. 
      */
     function decr($key, $step = 1) {
-	return (1 == $step) ? 
+	$rez = (1 == $step) ? 
 	    $this->cmd( array("DECR", $key) ) :
 	    $this->cmd( array("DECRBY",$key, $step) );
+	return (NULL===$rez) ? false : $rez;
     }
     
     /**
