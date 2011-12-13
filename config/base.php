@@ -25,7 +25,7 @@
     static function init(){
         if(null===self::$memcache){
            self::$memcache = new Memcache;
-           self::$memcache->connect(self::HOST, self::PORT);
+           self::$memcache->pconnect(self::HOST, self::PORT);
         }
         return self::$memcache;
         
