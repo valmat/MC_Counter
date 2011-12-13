@@ -80,10 +80,6 @@ class Counter {
     private        $is_locked = false;
     
     function __construct($SlotName, $id = NULL) {
-        
-        //$this->memstore = Mcache::init();
-        
-        
         $this->Key = $id . '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
         
         $SlotName = 'Counter_Slot_' . $SlotName;
@@ -163,6 +159,29 @@ class Counter {
      */
     function get(){
         return (int)( $this->Val = $this->memstore->get($this->Key) );
+    }
+    
+    /*
+     * Получить значение кеша если есть, или false, если отсутствует.
+     * function get
+     * @param  $keys array
+     * @return array counter values
+     */
+    static function mget($SlotName, $keys) {
+        $pf =  '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
+        
+        $rez = array_fill_keys($keys, 0);
+        $keys = array_combine($keys, array_map(
+            function($id) use($pf) {
+                return $id . $pf;
+            }, $keys));
+        $reKeys = array_flip($keys);
+        
+        $SlotName = 'Counter_Slot_' . $SlotName;
+        foreach($SlotName::memstore()->get($keys) as $k => $v) {
+            $rez[$reKeys[$k]] = $v;
+        }
+        return $rez;
     }
     
     /*

@@ -50,8 +50,8 @@ class Counter_Slot_AnySlot implements Counter_Slot_Interface {
      * @return Memstore_incremented_Interface
      */
     public function memstore() {
-        return new RedisCounter();
-        //return new Mcache();
+        //return new RedisCounter();
+        return new Mcache();
     }
 }
 
