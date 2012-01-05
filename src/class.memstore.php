@@ -216,8 +216,6 @@ class RedisCounter implements Memstore_incremented_Interface {
     const PORT = 0;
     private static $r = NULL;
     
-    private function __clone() {}
-    
     public function __construct() {
 	if(NULL === self::$r) {
 	    self::$r = new Redis(self::HOST, self::PORT);

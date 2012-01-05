@@ -34,7 +34,7 @@
 
 class Counter {
     
-    private $memcache = NULL;
+    private $memstore = NULL;
     
     /**
      *  NameSpase prefix for counter key
@@ -69,6 +69,7 @@ class Counter {
       *  Ключ слота (для передачи в слот) 
       */
     private $Val;
+    
     private $Slot;
     
     /**
@@ -80,7 +81,7 @@ class Counter {
     private        $is_locked = false;
     
     function __construct($SlotName, $id = NULL) {
-        $this->Key = $id . '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
+        $this->Key = (crc32(self::NAME_SPACE . $SlotName)+0x100000000) . '#' . $id;
         
         $SlotName = 'Counter_Slot_' . $SlotName;
         $Slot = new $SlotName($id);
@@ -173,13 +174,13 @@ class Counter {
      * @return array counter values
      */
     static function mget($SlotName, $keys, $fillZero = false) {
-        $pf =  '#' . (crc32(self::NAME_SPACE . $SlotName)+0x100000000);
+        $pf =  (crc32(self::NAME_SPACE . $SlotName)+0x100000000) . '#';
         
         $rez = $fillZero ? array_fill_keys($keys, 0) : array();
         
         $keys = array_combine($keys, array_map(
             function($id) use($pf) {
-                return $id . $pf;
+                return $pf . $id;
             }, $keys));
         $reKeys = array_flip($keys);
         
@@ -269,4 +270,4 @@ interface Counter_Slot_Interface
 
  require CONFIG_Counter::SLOT_PATH;
 
-?>
+
