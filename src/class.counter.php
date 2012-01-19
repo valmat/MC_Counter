@@ -188,9 +188,6 @@ class Counter {
         $memstore = $SlotClName::memstore();
         foreach($memstore->get($keys) as $k => $v) {
             $rez[$reKeys[$k]] = $v;
-            
-	    $cnt = new Counter($SlotName, $reKeys[$k]); $cnt->del();
-            
         }
         
         if(!$fillZero) {
@@ -199,10 +196,7 @@ class Counter {
                 # Если mget для слота задан, то получаем оптом
                 $expire = $SlotClName::expire();
                 foreach($SlotClName::mget(array_keys($diffKeys)) as $k => $v) {
-                    echo "<hr>\$rez[$k] = $v;";
                     $rez[$k] = $v;
-                    echo '<br>'.$keys[$k];
-                    
                     $memstore->add($keys[$k], $v, $expire );
                 }
             } else {
