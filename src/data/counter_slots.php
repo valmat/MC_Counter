@@ -6,7 +6,7 @@
  * class AnySlot
  */
 
-class Counter_Slot_AnySlot implements Counter_Slot_Interface {
+class Counter_Slot_AnySlot implements Counter_Slot_Interface, Counter_Slot_Multi_Interface {
     
     const CNTR_FILE_PREF = '/tmp/anycntr_';
     private $id;
@@ -33,6 +33,17 @@ class Counter_Slot_AnySlot implements Counter_Slot_Interface {
         return (int) file_get_contents(self::CNTR_FILE_PREF.$this->id.'.txt');
     }
     
+    static function mget($keys) {
+        $rez = array();
+        foreach($keys as $key) {
+            $rez[$key] = 0;
+            if(is_file(self::CNTR_FILE_PREF.$key.'.txt')){
+                $rez[$key] = (int) file_get_contents(self::CNTR_FILE_PREF.$key.'.txt');
+            }
+        }
+        return $rez;
+    }
+    
     public function delim() {
         return 4;
     }
@@ -48,8 +59,8 @@ class Counter_Slot_AnySlot implements Counter_Slot_Interface {
      * @return Memstore_incremented_Interface
      */
     public function memstore() {
-        return new RedisCounter();
-        //return new Mcache();
+        //return new RedisCounter();
+        return new Mcache();
     }
 }
 
