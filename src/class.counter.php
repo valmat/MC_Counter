@@ -199,6 +199,14 @@ class Counter {
     }
     
     /*
+     * Удалить ключь из хранилища в памяти
+     * function del
+     */
+    function del(){
+        return $this->memstore->del($this->Key);;
+    }
+    
+    /*
      * Функция установки интервала сброса в постоянное хранилище
      * function set_updelim
      * @param $var int

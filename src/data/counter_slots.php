@@ -16,17 +16,15 @@ class Counter_Slot_AnySlot implements Counter_Slot_Interface {
     }
     
     public function set($val) {
-        echo "<hr>set($val):<pre>";
+        echo "<pre style='color:red'><hr>set[{$this->id}]=";
         var_export($val);
-        echo '</pre><hr>';
+        echo '<hr></pre>';
         file_put_contents(self::CNTR_FILE_PREF.$this->id.'.txt', $val);
     }
     
     public function get() {
         //$id = self::key();
-        echo '<hr><h1>';
-        var_export($this->id);
-        echo '</h1><hr>';
+        echo "<hr><b style='color:green'>get({$this->id})</b><hr>";
         
         if(!is_file(self::CNTR_FILE_PREF.$this->id.'.txt')){
             file_put_contents(self::CNTR_FILE_PREF.$this->id.'.txt',0);
@@ -50,8 +48,8 @@ class Counter_Slot_AnySlot implements Counter_Slot_Interface {
      * @return Memstore_incremented_Interface
      */
     public function memstore() {
-        //return new RedisCounter();
-        return new Mcache();
+        return new RedisCounter();
+        //return new Mcache();
     }
 }
 

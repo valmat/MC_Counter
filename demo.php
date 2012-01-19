@@ -19,7 +19,9 @@
     $cnt = new Counter('AnySlot',22);
     //$cnt->set_updelim(0);
     
-    echo '<h2>'.$cnt->increment().'</h2>';
+    echo '<h2>$cnt->get() = '.$cnt->get().'</h2>';
+    //echo '<h2>$cnt->del() = '.(int)$cnt->del().'</h2>';
+    echo '<h2>$cnt->increment() = '.$cnt->increment().'</h2>';
     //echo '<h2>'.$cnt->get().'</h2>';
     //echo $cnt->set(11);
     
